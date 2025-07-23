@@ -1,0 +1,306 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8" />
+  <title>IQ Test with Timer & Restart</title>
+  <style>
+    body {
+      font-family: Arial, sans-serif;
+      background: #f2f2f2;
+      padding: 20px;
+      text-align: center;
+    }
+    .quiz-container {
+      background: white;
+      padding: 20px;
+      max-width: 600px;
+      margin: auto;
+      border-radius: 10px;
+      box-shadow: 0 0 10px #ccc;
+    }
+    .question {
+      font-weight: bold;
+      margin-bottom: 15px;
+      font-size: 1.2em;
+    }
+    .options {
+      list-style: none;
+      padding: 0;
+      margin-bottom: 20px;
+    }
+    .options li {
+      margin-bottom: 10px;
+      text-align: left;
+    }
+    #nextBtn {
+      padding: 10px 20px;
+      font-size: 16px;
+      cursor: pointer;
+    }
+    #timer {
+      font-size: 18px;
+      margin-bottom: 15px;
+      font-weight: bold;
+      color: #d9534f;
+    }
+    #result {
+      margin-top: 20px;
+      font-size: 20px;
+      font-weight: bold;
+    }
+    button#restartBtn {
+      margin-top: 15px;
+      padding: 10px 20px;
+      font-size: 16px;
+      cursor: pointer;
+    }
+  </style>
+</head>
+<body>
+  <div class="quiz-container">
+    <h1>IQ Test with Timer</h1>
+    <div id="quiz">
+      <div id="timer">Time Left: 30s</div>
+      <div id="question" class="question"></div>
+      <ul id="options" class="options"></ul>
+      <button id="nextBtn">Next</button>
+      <div id="result"></div>
+    </div>
+  </div>
+
+  <script>
+    const questions = [
+      {
+        question: "What comes next in the sequence: 2, 4, 8, 16, ?",
+        options: ["18", "20", "32", "30"],
+        answer: 2
+      },
+      {
+        question: "Which word is the odd one out?",
+        options: ["Apple", "Banana", "Carrot", "Grape"],
+        answer: 2
+      },
+      {
+        question: "What is the missing number: 3, 6, 9, ?, 15",
+        options: ["10", "12", "11", "13"],
+        answer: 1
+      },
+      {
+        question: "Which of the following is a palindrome?",
+        options: ["GARDEN", "REDDER", "DEVIL", "WINDOW"],
+        answer: 1
+      },
+      {
+        question: "Which shape is a net of a cube?",
+        options: ["T Shape", "Straight Line", "L Shape", "All of these"],
+        answer: 0
+      },
+      {
+        question: "Which number is one quarter of one half of one tenth of 800?",
+        options: ["10", "12.5", "20", "100"],
+        answer: 0
+      },
+      {
+        question: "Mary is 16 years old. Four years ago, her brother was twice her age. How old is he now?",
+        options: ["20", "24", "28", "32"],
+        answer: 1
+      },
+      {
+        question: "Which letter comes next: J, F, M, A, M, J, ?",
+        options: ["J", "A", "S", "D"],
+        answer: 0
+      },
+      {
+        question: "If all Bloops are Razzies and all Razzies are Lazzies, are all Bloops definitely Lazzies?",
+        options: ["Yes", "No", "Maybe", "Only if Bloop is a Lazz"],
+        answer: 0
+      },
+      {
+        question: "If 1=3, 2=3, 3=5, 4=4, 5=4, 6=?",
+        options: ["3", "4", "5", "6"],
+        answer: 1
+      },
+      {
+        question: "What number comes next: 121, 144, 169, ?",
+        options: ["196", "182", "186", "176"],
+        answer: 0
+      },
+      {
+        question: "Choose the odd one out:",
+        options: ["Triangle", "Square", "Hexagon", "Sphere"],
+        answer: 3
+      },
+      {
+        question: "Which angle is the smallest?",
+        options: ["30°", "45°", "60°", "90°"],
+        answer: 0
+      },
+      {
+        question: "Find the missing letter: B, D, G, K, P, ?",
+        options: ["V", "U", "T", "X"],
+        answer: 0
+      },
+      {
+        question: "Which of the following is a multiple of both 3 and 4?",
+        options: ["6", "12", "24", "Both 12 and 24"],
+        answer: 3
+      }
+    ];
+
+    const maxTime = 30; // seconds per question
+    let currentQuestion = 0;
+    let score = 0;
+    let timer;
+    let timeLeft = maxTime;
+    let totalTimeTaken = 0; // track time used for all questions
+
+    const questionEl = document.getElementById("question");
+    const optionsEl = document.getElementById("options");
+    const nextBtn = document.getElementById("nextBtn");
+    const resultEl = document.getElementById("result");
+    const timerEl = document.getElementById("timer");
+
+    function startTimer() {
+      timeLeft = maxTime;
+      timerEl.textContent = `Time Left: ${timeLeft}s`;
+      timer = setInterval(() => {
+        timeLeft--;
+        timerEl.textContent = `Time Left: ${timeLeft}s`;
+        if (timeLeft <= 0) {
+          clearInterval(timer);
+          totalTimeTaken += maxTime; // max time taken (timeout)
+          goNext(false); // treat as wrong answer
+        }
+      }, 1000);
+    }
+
+    function showQuestion() {
+      clearInterval(timer);
+      resultEl.textContent = "";
+      let q = questions[currentQuestion];
+      questionEl.style.display = "block";
+      optionsEl.style.display = "block";
+      nextBtn.style.display = "inline-block";
+      timerEl.style.display = "block";
+      questionEl.textContent = q.question;
+      optionsEl.innerHTML = "";
+      q.options.forEach((option, index) => {
+        let li = document.createElement("li");
+        li.innerHTML = `<label><input type="radio" name="option" value="${index}"> ${option}</label>`;
+        optionsEl.appendChild(li);
+      });
+      startTimer();
+    }
+
+    function goNext(answered) {
+      clearInterval(timer);
+      let q = questions[currentQuestion];
+      if (answered) {
+        let selected = document.querySelector('input[name="option"]:checked');
+        if (selected) {
+          let chosen = parseInt(selected.value);
+          if (chosen === q.answer) score++;
+          totalTimeTaken += (maxTime - timeLeft);
+        }
+      }
+      currentQuestion++;
+      if (currentQuestion < questions.length) {
+        showQuestion();
+      } else {
+        showResult();
+      }
+    }
+
+    nextBtn.addEventListener("click", () => {
+      let selected = document.querySelector('input[name="option"]:checked');
+      if (!selected) return alert("Please select an answer before continuing.");
+      goNext(true);
+    });
+
+    function calculateIQ(score, avgTime) {
+      // Base IQ from score (0-15)
+      const baseScale = {
+        0: 50,
+        1: 60,
+        2: 70,
+        3: 75,
+        4: 80,
+        5: 85,
+        6: 90,
+        7: 95,
+        8: 100,
+        9: 105,
+        10: 110,
+        11: 120,
+        12: 130,
+        13: 135,
+        14: 140,
+        15: 145
+      };
+      let baseIQ = baseScale[score] || 145;
+
+      // Adjust IQ based on average time per question
+      // avgTime range 0 (fastest) to maxTime (slowest)
+      // Faster than 15s = +10 IQ
+      // Slower than 25s = -10 IQ
+      // Linear interpolation in between
+      let adj = 0;
+      if (avgTime <= 15) {
+        adj = 10 * ((15 - avgTime) / 15); // from 0 to +10
+      } else if (avgTime > 25) {
+        adj = -10 * ((avgTime - 25) / 5); // up to -10
+        if (adj < -10) adj = -10;
+      }
+
+      let finalIQ = Math.round(baseIQ + adj);
+      if(finalIQ < 50) finalIQ = 50;
+      if(finalIQ > 160) finalIQ = 160;
+
+      return finalIQ;
+    }
+
+    function showResult() {
+      questionEl.style.display = "none";
+      optionsEl.style.display = "none";
+      nextBtn.style.display = "none";
+      timerEl.style.display = "none";
+
+      let avgTime = totalTimeTaken / questions.length;
+      let iq = calculateIQ(score, avgTime);
+
+      let message = "";
+      if(iq < 85) message = "Below Average";
+      else if(iq <= 115) message = "Average";
+      else if(iq <= 130) message = "Above Average";
+      else message = "Gifted";
+
+      resultEl.innerHTML = `
+        You scored ${score} out of ${questions.length}.<br>
+        Average time per question: ${avgTime.toFixed(1)} seconds.<br>
+        <strong>Estimated IQ:</strong> ${iq} (${message})<br><br>
+        <button id="restartBtn">Restart Test</button>
+      `;
+
+      // Add listener for restart button:
+      document.getElementById('restartBtn').addEventListener('click', restartTest);
+    }
+
+    function restartTest() {
+      currentQuestion = 0;
+      score = 0;
+      totalTimeTaken = 0;
+      
+      questionEl.style.display = "block";
+      optionsEl.style.display = "block";
+      nextBtn.style.display = "inline-block";
+      timerEl.style.display = "block";
+      resultEl.innerHTML = "";
+
+      showQuestion();
+    }
+
+    // Start the quiz on page load
+    showQuestion();
+  </script>
+</body>
+</html>
